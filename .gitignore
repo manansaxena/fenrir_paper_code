@@ -1,0 +1,6 @@
+results/*
+data/simulated/*
+scripts/*
+code/stan/model
+code/stan/model_W
+code/job_listing_N.txt
