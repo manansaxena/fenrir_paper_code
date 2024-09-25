@@ -24,11 +24,10 @@ functions {
                 array[] real gamma, array[] matrix M0, array[] matrix C0, matrix Xi0, real upsilon0, 
                 array[] int observed_TT, array[] int N_total_list, int num_timeseries){
     
-        int TT = size(observed_TT); // total number of timepoints (includes missing values + all timeseries)
+        int TT = size(observed_TT);
         int p = rows(eta);
         int q = rows(G[1]);
         
-        // system matricies for each iteration
         vector[q] F_t;
         matrix[q,q] G_t;
         matrix[q,q] W_t;
@@ -36,7 +35,6 @@ functions {
         real upsilon;
         real gamma_t;
         
-        // internals to filter
         matrix[q,p] M;
         matrix[q,q] C;
         matrix[q,p] A; 
@@ -103,6 +101,7 @@ functions {
         matrix[q,p] theta = M + cholesky_decompose(C)*X*cholesky_decompose(Sigma)';
         return theta;
     }
+    
   array[] matrix gmdlm_smoothing_rng(matrix eta, array[] vector F, array[] matrix G, array[] matrix W,
                                                 array[] real gamma,array[] matrix M0, array[] matrix C0, matrix Xi0, real upsilon0,
                                                 array[] int observed_TT, array[] int N_total_list, int num_timeseries){
@@ -145,7 +144,7 @@ functions {
 
             A[t] = G_t*M[t + timeseries - 1];
             R[t] = quad_form(C[t + timeseries - 1], G_t') + W_t;
-
+            
             if(observed_TT[t] == 1){
                 f = A[t]'*F_t;
                 qq = quad_form(R[t], F_t) + gamma_t;

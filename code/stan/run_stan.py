@@ -1,5 +1,4 @@
 import os
-import shutil
 import cmdstanpy
 from cmdstanpy import CmdStanModel
 import numpy as np
@@ -13,19 +12,14 @@ def replace_upper_tri(mat, val):
     mat[np.triu_indices_from(mat, k=1)] = val
     return mat
 
-def clear_directory(directory):
-    shutil.rmtree(directory)
-    os.makedirs(directory)
-
 def run_mcmc(D, Q, data_path, results_path, stan_model_path, infer_W = 0):
-    # clear_directory(results_path)
 
     M0_list = pd.read_csv(data_path+"M0_list.csv",header=None).to_numpy().flatten().tolist()
     C0_list = pd.read_csv(data_path+"C0_list.csv",header=None).to_numpy().flatten().tolist()
     W_val = pd.read_csv(data_path+"W_val.csv",header=None).to_numpy().flatten().tolist()[0]
     N_total_list = pd.read_csv(data_path+"N_total_list.csv",header=None).to_numpy().flatten().tolist()
     N_obs_list = pd.read_csv(data_path+"N_obs_list.csv",header=None).to_numpy().flatten().tolist()
-    Y = pd.read_csv(data_path+"Y.csv",header=None).to_numpy().astype(np.int64)
+    Y_obs = pd.read_csv(data_path+"Y_obs.csv",header=None).to_numpy().astype(np.int64)
     observed_TT = pd.read_csv(data_path+"observed_indices.csv",header=None).to_numpy().flatten().astype(np.int64)
 
     q = Q 
@@ -34,7 +28,7 @@ def run_mcmc(D, Q, data_path, results_path, stan_model_path, infer_W = 0):
     F = np.full((q, sum(N_total_list)), 1)
     G = [np.eye(q) * 1 for _ in range(sum(N_total_list))]
     gamma = np.ones(sum(N_total_list))
-    Xi0 = np.identity(p) * 10
+    Xi0 = np.identity(p) * 1
     upsilon0 = D + 3
     init = np.zeros(shape=(p,sum(N_obs_list)))
 
@@ -68,7 +62,7 @@ def run_mcmc(D, Q, data_path, results_path, stan_model_path, infer_W = 0):
         "N_total_list": N_total_list,
         "p" : p,
         "q" : q,
-        "Y" : Y,
+        "Y_obs" : Y_obs,
         "FF" : F.T.tolist(),
         "GG" : G,
         "gamma" : gamma.tolist(),
@@ -85,21 +79,24 @@ def run_mcmc(D, Q, data_path, results_path, stan_model_path, infer_W = 0):
 
     # run mcmc
     model = CmdStanModel(stan_file=stan_model_path,cpp_options={'STAN_THREADS':'true'})
-    fit = model.sample(data=data_dict,inits={"eta" : init}, output_dir=results_path, iter_sampling=100, iter_warmup=100, chains=2, parallel_chains=4)
+    start_time = time.time()
+    fit = model.sample(data=data_dict,inits={"eta" : init}, output_dir=results_path, iter_sampling=3000, iter_warmup=1500, chains=4, parallel_chains=4)
+    end_time = time.time()
+    mcmc_time = end_time - start_time
+    print("mcmc time", mcmc_time)
+    
     # Save the fit model using pickle
     with open(results_path + "fit.pkl", "wb") as f:
         pkl.dump(fit, f)
 
 def optimize_gmdlm(D, Q, data_path, results_path, stan_model_path):
 
-    # clear_directory(results_path)
-
     M0_list = pd.read_csv(data_path+"M0_list.csv",header=None).to_numpy().flatten().tolist()
     C0_list = pd.read_csv(data_path+"C0_list.csv",header=None).to_numpy().flatten().tolist()
     W_val = pd.read_csv(data_path+"W_val.csv",header=None).to_numpy().flatten().tolist()[0]
     N_total_list = pd.read_csv(data_path+"N_total_list.csv",header=None).to_numpy().flatten().tolist()
     N_obs_list = pd.read_csv(data_path+"N_obs_list.csv",header=None).to_numpy().flatten().tolist()
-    Y = pd.read_csv(data_path+"Y.csv",header=None).to_numpy().astype(np.int64)
+    Y_obs = pd.read_csv(data_path+"Y_obs.csv",header=None).to_numpy().astype(np.int64)
     observed_TT = pd.read_csv(data_path+"observed_indices.csv",header=None).to_numpy().flatten().astype(np.int64)
 
     q = Q 
@@ -108,7 +105,7 @@ def optimize_gmdlm(D, Q, data_path, results_path, stan_model_path):
     F = np.full((q, sum(N_total_list)), 1)
     G = [np.eye(q) * 1 for _ in range(sum(N_total_list))]
     gamma = np.ones(sum(N_total_list))
-    Xi0 = np.identity(p) * 10
+    Xi0 = np.identity(p) * 1
     upsilon0 = D + 3
     init = np.zeros(shape=(p,sum(N_obs_list)))
 
@@ -133,7 +130,7 @@ def optimize_gmdlm(D, Q, data_path, results_path, stan_model_path):
         "N_total_list": N_total_list,
         "p" : p,
         "q" : q,
-        "Y" : Y,
+        "Y_obs" : Y_obs,
         "FF" : F.T.tolist(),
         "GG" : G,
         "WW" : W,
@@ -144,16 +141,12 @@ def optimize_gmdlm(D, Q, data_path, results_path, stan_model_path):
         "upsilon0" : upsilon0,
     }
 
-    # iterations = [10, 50, 100, 150, 200, 250, 300, 400, 500, 600, 700, 800, 900, 1000, 1100, 1200, 10000]
     iterations = [50,500,1000,10000]
     optim_time_list = []
 
     for iters in iterations:
-
         os.mkdir(results_path+str(iters))
-
         model = CmdStanModel(stan_file=stan_model_path)
-
         start_time = time.time()
         mle = model.optimize(data=data_dict,
                             seed=1,
@@ -175,14 +168,9 @@ def optimize_gmdlm(D, Q, data_path, results_path, stan_model_path):
 
         for file in os.listdir(results_path+str(iters)):
             if file.endswith(".csv"):
-                # os.rename(results_path+file, results_path+"gdlm.csv")
-
                 df = pd.read_csv(results_path+str(iters)+"/"+file, comment='#')
-
                 header_index = df.columns.tolist().index('lp__')
-
                 df = df.iloc[:, header_index:]
-
                 df.to_csv(results_path+str(iters)+"/"+file, index=False)
     
     with open(results_path+'optimization_times.csv', 'w', newline='') as file:
@@ -193,8 +181,7 @@ def optimize_gmdlm(D, Q, data_path, results_path, stan_model_path):
 
 if __name__ == "__main__":
 
-    cmdstanpy.set_cmdstan_path("/home/ayden/anaconda3/envs/stanpip/cmdstan-2.33.1")
-
+    cmdstanpy.set_cmdstan_path("random_path" + ".conda/envs/stanpip/cmdstan-2.33.1") # set path where anaconda libraries are stored
 
     parser = argparse.ArgumentParser(description='for stan collapsed model')
     parser.add_argument('D', type=int)

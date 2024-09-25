@@ -5,19 +5,17 @@ data {
   int<lower=1> N_obs;
   int<lower=1> num_timeseries;
 
-  int<lower=1> p;  // dimension of one eta vector
-  int<lower=1> q;  // number of parameters in each state space
+  int<lower=1> p;  
+  int<lower=1> q; 
   array[N_total] int observed_TT;
   array[num_timeseries] int N_total_list;
 
-  array[p+1, N_total] int<lower=-1> Y;
+  array[p+1, N_obs] int<lower=-1> Y_obs;
 
-  // DLM matrices
   array[N_total] vector[q] FF;
   array[N_total] matrix[q,q] GG;
   array[N_total] real gamma;
   
-  // initialization parameters and Priors
   array[num_timeseries] matrix[q,p] M0;
   array[num_timeseries] cov_matrix[q] C0;
   cov_matrix[p] Xi0;
@@ -38,9 +36,9 @@ transformed parameters {
   for (j in 1:N_obs) {
       pi[j] = softmax_id(eta[,j]);
   }
-  array[N_total] matrix[q, q] WW;  // Replicated W matrices
+  array[N_total] matrix[q, q] WW;
   for (n in 1:N_total) {
-    WW[n] = identity_matrix(q) * W;  // Assign W to each element of the array
+    WW[n] = identity_matrix(q) * W;
   }
 }
 
@@ -51,7 +49,7 @@ model {
   target += gmdlm_lpdf(eta | FF, GG, WW, gamma, M0, C0, Xi0, upsilon0, observed_TT, N_total_list, num_timeseries);
   for (i in 1:N_total) {
     if (observed_TT[i] == 1) {
-      Y[, i] ~ multinomial(pi[pos]);
+      Y_obs[, pos] ~ multinomial(pi[pos]);
       pos = pos + 1;
     }
   }
