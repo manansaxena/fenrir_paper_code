@@ -144,7 +144,8 @@ foreach::getDoParRegistered()
 
 gibbs_start <- Sys.time()
 
-# We run this gibbs sampler by considering different number of vessels.
+# We can run this gibbs sampler by considering how many vessels are considered at a time. 
+# For analysis considerd in the paper, we only use the case when n_t = num_timeseries = total number of vessels = 4
 results <- foreach(n_t = 1:num_timeseries, .packages = c("fenrir", "LaplacesDemon")) %dopar% {
   theta_z <- vector("list", z)
   e_z <- vector("list", z)
@@ -179,7 +180,7 @@ time_list["gibbs_time"] <- gibbs_time
 W_means <- numeric(num_timeseries)
 
 for (i in 1:num_timeseries) {
-  W_means[i] <- mean(unlist(lapply(W_ct[[i]][25:z], mean)))
+  W_means[i] <- mean(unlist(lapply(W_ct[[i]][1000:z], mean)))
 }
 
 save(W_ct, file = paste0(result_path, "W_gibbs.RData"))

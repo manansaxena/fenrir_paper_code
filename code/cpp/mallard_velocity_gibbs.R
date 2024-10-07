@@ -151,7 +151,7 @@ e_z <- vector("list", z)
 W_z <- vector("list", z)
 n_t <- 4
 
-# Unlike mallard_gibbs.R, I run this model considering all four vessels.
+# Unlike mallard_gibbs.R, I run this model only for the case when all four vessels are considered. 
 for (i in 1:z) {
   W_z[[i]] <- numeric(2)
 

@@ -71,8 +71,6 @@ init <- matrix(0, nrow = P, ncol = N_obs)
 result_optim <- optimizer(Y_obs, observed_TT, N_total_list, F, G, gamma, W, M0, C0, Xi0, v0, init, result_path)
 save(result_optim, file = paste0(result_path, "result_optim.RData"))
 
-
-#---------------------Setup Parallelization------------------------------------------------------------------------
 num_cores <- n_cores
 my_cluster <- parallel::makeCluster(num_cores, type = "PSOCK")
 parallel::clusterEvalQ(my_cluster, {
@@ -81,7 +79,6 @@ parallel::clusterEvalQ(my_cluster, {
 doParallel::registerDoParallel(cl = my_cluster)
 foreach::getDoParRegistered()
 
-#---------------------Smoothing -----------------------------------------------------------------------
 smoothed_theta_nomcmc <- vector("list", dim(result_optim[["mult_dir_samples"]])[3])
 
 smoothed_theta_nomcmc <- foreach(c=1:dim(result_optim[["mult_dir_samples"]])[3], .packages = c("fenrir")) %dopar%
