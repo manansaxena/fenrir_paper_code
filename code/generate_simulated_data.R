@@ -1,3 +1,5 @@
+# change Xi0, M0, C0 and sequencing depth to increase/decrease sparsity in the simulated data
+
 # set the path where all the R libraries are stored.
 .libPaths(c("random_path", .libPaths()))
 
@@ -58,7 +60,7 @@ simulate_data_for_multiple_ts <- function(D, Q, rseed, W_val, percent_of_missing
     }
     Pi <- t(alrInv(t(eta)))
     Y <- matrix(0, D, N)
-    for (i in 1:N) Y[,i] <- rmultinom(1, sample(0:5000), prob = Pi[,i])
+    for (i in 1:N) Y[,i] <- rmultinom(1, sample(0:5000), prob = Pi[,i]) # change the sequencing depth to increase/decrease sparsity
     Y_missing <- matrix(-1, D, N_total_list[timeseries])
     observed_indices <- rep(0,N_total_list[timeseries])
     j <- 1

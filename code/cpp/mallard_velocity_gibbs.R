@@ -74,7 +74,7 @@ get_theta <- function(W_theta_val, W_alpha_val, first_n_timeseries) {
   res <- fenrir::fenrir_smooth(
       result_optim[["mult_dir_samples"]][,,which_multdir], F[, 1:N_considered, drop = FALSE], G[1:N_considered], gamma[1:N_considered], W,
       M0[1:first_n_timeseries], C0[1:first_n_timeseries], Xi0, v0,
-      observed_considered_TT, N_considered_list, seed
+      observed_considered_TT, N_considered_list, seed, 0
   )
   combined_matrix <- matrix(nrow = P, ncol = N_considered*Q)
   column_index <- 1
@@ -190,13 +190,13 @@ for (i in 1:z){
   theta_smoothed[i,,] <- theta_z[[i]][[1]]
 }
 
-smoothed_theta_nomcmc_clr <- array(0,dim=c(z,P+1,N_total*Q))
+smoothed_theta_clr <- array(0,dim=c(z,P+1,N_total*Q))
 
 for(c in 1:z){
   proportions <-  fido::alrInv(t(theta_smoothed[c,,]),1)
-  smoothed_theta_nomcmc_clr[c,,] <- t(fido::clr_array(proportions,2))
+  smoothed_theta_clr[c,,] <- t(fido::clr_array(proportions,2))
 }
 
-save(theta_smoothed, file = paste0(result_path, "result_theta_dir_without_mcmc_gibbs.RData"))
-save(smoothed_theta_nomcmc_clr, file = paste0(result_path, "result_theta_dir_without_mcmc_clr_gibbs.RData"))
+save(theta_smoothed, file = paste0(result_path, "result_theta_dir_gibbs.RData"))
+save(smoothed_theta_clr, file = paste0(result_path, "result_theta_dir_clr_gibbs.RData"))
 save(time_list, file = paste0(result_path,"time_list.RData"))

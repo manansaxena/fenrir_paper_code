@@ -56,29 +56,29 @@ init <- matrix(0, nrow = P, ncol = N_obs)
 result_optim <- optimizer(Y_obs, observed_TT, N_total_list, F, G, gamma, W, M0, C0, Xi0, v0, init, result_path)
 save(result_optim, file = paste0(result_path, "result_optim.RData"))
 
-smoothed_theta_nomcmc <- vector("list", dim(result_optim[["mult_dir_samples"]])[3])
+smoothed_theta <- vector("list", dim(result_optim[["mult_dir_samples"]])[3])
 
 for (c in 1:dim(result_optim[["mult_dir_samples"]])[3]) {
   seed <- sample(1:10000, 1)
-  res <- fenrir::fenrir_smooth(result_optim[["mult_dir_samples"]][,,c], F, G, gamma, W, M0, C0, Xi0, v0, observed_TT, N_total_list, seed)
-  smoothed_theta_nomcmc[[c]] <- res$theta_smoothed
+  res <- fenrir::fenrir_smooth(result_optim[["mult_dir_samples"]][,,c], F, G, gamma, W, M0, C0, Xi0, v0, observed_TT, N_total_list, seed, 0)
+  smoothed_theta[[c]] <- res$theta_smoothed
 }
 
-smoothed_theta_nomcmc_matrix <- array(0, dim=c(length(smoothed_theta_nomcmc), Q, P, N_total))
-for (i in 1:length(smoothed_theta_nomcmc)) {
+smoothed_theta_matrix <- array(0, dim=c(length(smoothed_theta), Q, P, N_total))
+for (i in 1:length(smoothed_theta)) {
   for (j in 1:N_total){
-    smoothed_theta_nomcmc_matrix[i,,,j] = smoothed_theta_nomcmc[[i]][[j]]
+    smoothed_theta_matrix[i,,,j] = smoothed_theta[[i]][[j]]
   }
 }
 
-smoothed_theta_nomcmc_clr <- array(0, dim=c(length(smoothed_theta_nomcmc),Q,P+1,N_total))
+smoothed_theta_clr <- array(0, dim=c(length(smoothed_theta),Q,P+1,N_total))
 
-for(i in 1:length(smoothed_theta_nomcmc)){
+for(i in 1:length(smoothed_theta)){
   for (j in 1:Q){
-    proportions <-  fido::alrInv(t(smoothed_theta_nomcmc_matrix[i,j,,]),1)
-    smoothed_theta_nomcmc_clr[i,j,,] <- t(fido::clr_array(proportions,2))
+    proportions <-  fido::alrInv(t(smoothed_theta_matrix[i,j,,]),1)
+    smoothed_theta_clr[i,j,,] <- t(fido::clr_array(proportions,2))
   }
 }
 
-save(smoothed_theta_nomcmc, file = paste0(result_path, "result_theta_dir_without_mcmc.RData"))
-save(smoothed_theta_nomcmc_clr, file = paste0(result_path, "result_theta_dir_without_mcmc_clr.RData"))
+save(smoothed_theta, file = paste0(result_path, "result_theta_dir_without.RData"))
+save(smoothed_theta_clr, file = paste0(result_path, "result_theta_dir_without_clr.RData"))

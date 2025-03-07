@@ -4,7 +4,7 @@ library(tidyverse)
 library(lubridate)
 setwd("random_path_where_code_is_stored/fenrir_paper_code/data/mallard/")
 
-load("mallard_family.RData")
+load("mallard_raw.RData")
 
 mallard_family$sample_data <- mallard_family$sample_data %>%
   select(X.SampleID,time,Vessel,SampleType,batch)%>%

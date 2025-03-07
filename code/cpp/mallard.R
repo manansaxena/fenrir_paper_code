@@ -74,20 +74,22 @@ parallel::clusterEvalQ(my_cluster, {
 doParallel::registerDoParallel(cl = my_cluster)
 foreach::getDoParRegistered()
 
-smoothed_theta_nomcmc <- foreach(c=1:dim(result_optim[["mult_dir_samples"]])[3]) %dopar%
+smoothed_theta <- foreach(c=1:dim(result_optim[["mult_dir_samples"]])[3]) %dopar%
 {
   seed <- sample(1:10000, 1)
-  res <- fenrir::fenrir_smooth(result_optim[["mult_dir_samples"]][,,c], F, G, gamma, W, M0, C0, Xi0, v0, observed_TT, N_total_list, seed)
+  res <- fenrir::fenrir_smooth(result_optim[["mult_dir_samples"]][,,c], F, G, gamma, W, M0, C0, Xi0, v0, observed_TT, N_total_list, seed, 0)
   res$theta_smoothed
 }
 
-smoothed_theta_nomcmc_matrix <- lapply(smoothed_theta_nomcmc, function(sample){t(do.call(rbind, sample))})
+smoothed_theta_matrix <- lapply(smoothed_theta, function(sample){t(do.call(rbind, sample))})
 
-smoothed_theta_nomcmc_clr <- foreach(i = 1:length(smoothed_theta_nomcmc_matrix)) %dopar%
+smoothed_theta_clr <- foreach(i = 1:length(smoothed_theta_matrix)) %dopar%
 {
-  proportions <-  fido::alrInv(t(smoothed_theta_nomcmc_matrix[[i]]),1)
+  proportions <-  fido::alrInv(t(smoothed_theta_matrix[[i]]),1)
   t(fido::clr_array(proportions,2))
 }
 
-save(smoothed_theta_nomcmc, file = paste0(result_path, "result_theta_dir_without_mcmc.RData"))
-save(smoothed_theta_nomcmc_clr, file = paste0(result_path, "result_theta_dir_without_mcmc_clr.RData"))
+save(smoothed_theta, file = paste0(result_path, "result_theta_dir.RData"))
+save(smoothed_theta_clr, file = paste0(result_path, "result_theta_dir_clr.RData"))
+
+stopCluster(my_cluster)

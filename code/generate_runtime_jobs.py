@@ -9,6 +9,7 @@ def clear_directory(directory):
     shutil.rmtree(directory)
     os.makedirs(directory)
 
+# change M0 and C0 values to increase/decrease sparsity in the simulated data
 def generate_params(N_vals):
     # each time series would be of 100 timepoints
     N_total_list = []

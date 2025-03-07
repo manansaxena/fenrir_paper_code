@@ -2,7 +2,9 @@
 Code for Scalable Inference for Bayesian Multinomial Logistic-Normal Dynamic Linear Models Paper
 
 ## Overview of this repository
-This repository consists of all the code (besides our R package [Fenrir](https://github.com/manansaxena/fenrir)) required to produce results for our paper (Link to be added later).
+This repository consists of all the code (besides our R package [Fenrir](https://github.com/manansaxena/fenrir)) required to produce results for our paper (https://arxiv.org/abs/2410.05548). 
+
+**Code is being actively developed under [Fenrir](https://github.com/manansaxena/fenrir) package.**
 
 **Directory Structure**
 ```
@@ -70,4 +72,3 @@ install.packages("foreach")
 ## Python Dependencies
 
 ```pip install -r requirements.txt``` to install required libraries.
-
